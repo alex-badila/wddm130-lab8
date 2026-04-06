@@ -139,3 +139,29 @@ tbody tr:hover td {
   background-color: #b560b5;
   transition: background-color 0.2s ease;
 }
+
+header {
+    display: flex;
+    justify-content: flex-end;
+}
+
+header p {
+    padding: 0px;
+}
+
+#loginMain {
+    width: 400px;
+    display: flex;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+}
+
+#loginMain form div label {
+    display: inline-block;
+    width: 150px;
+}
+
+#loginMain form input[type="submit"], #loginMain form input[type="reset"] {
+    width: 100px;
+}

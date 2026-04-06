@@ -11,3 +11,11 @@
     <link rel="stylesheet" type="text/css" href="/css/form.css">
 </head>
 <body>
+    <header>
+        <% if(typeof(logged) !== "undefined") {%>
+            <p>Welcome <%= logged.name %></p>
+            &nbsp; <a href="/logout">Logout</a>
+        <% } else { %>
+            <p><a href="/login">Log In</a></p>
+        <% } %>
+    </header>

@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("path");
 const {check, validationResult} = require('express-validator');
 const mongoose = require("mongoose");
+const session = require("express-session");
 
 const Order = mongoose.model("Order", {
     name: String,
@@ -16,7 +17,18 @@ const Order = mongoose.model("Order", {
     total: Number
 });
 
+const Admin = mongoose.model("Admin", {
+    username: String,
+    password: String
+});
+
 const app = express();
+
+app.use(session({
+    secret: "mysecret",
+    resave: false,
+    saveUninitialized: true
+}));
 
 // Connection caching for serverless
 let isConnected = false;
@@ -33,6 +45,43 @@ app.set("view engine", "ejs");
 
 app.get("/", async (req, res) => {
     res.render("form");
+});
+
+app.get("/login", async (req, res) => {
+    res.render("login");
+});
+
+app.post("/login", [
+    check("uname", "UserName Empty").notEmpty(),
+    check("pass", "Password Empty").notEmpty()
+], async (req, res) => {
+    let errors = validationResult(req);
+
+    if(errors.isEmpty())
+    {
+        await connectDB();
+        Admin.findOne({ username: req.body.uname }).then((data) => {
+            if (data === null || data.password !== req.body.pass) {
+                res.render("login", { loginError: "Username or Password Incorrect" });
+            } 
+            else {
+                req.session.loggedIn  = true;
+                req.session.user = data.username;
+                // res.render("orders", {logged:{
+                //     name: req.session.user ,
+                //     sstatus: req.session.loggedIn
+                // }});
+                res.redirect("/allOrders")
+            }
+        }).catch((err) => {
+            console.log(err);
+        });
+    }
+});
+
+app.get("/logout", async (req, res) => {
+    req.session.destroy();
+    res.redirect("/login");
 });
 
 app.post("/processForm", [
@@ -125,12 +174,21 @@ app.post("/processForm", [
 });
 
 app.get("/allOrders", async (req, res) => {
-    await connectDB(); // ← connect before DB operations
-    Order.find({}).then(data => {
-        res.render("orders", {data: data});
-    }).catch(err => {
-        console.log("Data read error");
-    });
+    if(req.session.loggedIn) {
+        await connectDB(); // ← connect before DB operations
+        Order.find({}).then(data => {
+            res.render("orders", {data: data, logged:{
+                    name: req.session.user,
+                    status: req.session.loggedIn
+                }});
+        }).catch(err => {
+            console.log("Data read error");
+        });
+    }
+    else {
+        res.redirect("/login");
+    }
+    
 });
 
 // Export for Vercel
