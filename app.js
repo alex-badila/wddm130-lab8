@@ -71,7 +71,7 @@ app.post("/login", [
                 //     name: req.session.user ,
                 //     sstatus: req.session.loggedIn
                 // }});
-                res.redirect("/allOrders")
+                res.redirect("/allOrders");
             }
         }).catch((err) => {
             console.log(err);
@@ -82,6 +82,27 @@ app.post("/login", [
 app.get("/logout", async (req, res) => {
     req.session.destroy();
     res.redirect("/login");
+});
+
+app.get("/update/:ids", async (req, res) => {
+    let id = req.params.ids;
+    console.log(id);
+});
+
+app.get("/delete/:ids", async (req, res) => {
+    let id = req.params.ids;
+    // console.log(id);
+    Order.findOneAndDelete({_id: id}).then(data => {
+        if(data !== null) {
+            res.redirect("/allOrders");
+        }
+        else {
+            
+        }
+    })
+    .catch(err => {
+
+    })
 });
 
 app.post("/processForm", [
