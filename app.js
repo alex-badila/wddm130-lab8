@@ -87,6 +87,7 @@ app.get("/logout", async (req, res) => {
 app.get("/update/:ids", async (req, res) => {
     if (!req.session.loggedIn) return res.redirect("/login");
 
+    await connectDB();
     let id = req.params.ids;
     Order.findOne({ _id: id }).then(data => {
         if (!data) return res.redirect("/allOrders");
@@ -123,7 +124,8 @@ app.post("/update/:ids", [
 ], async (req, res) => {
     const errors = validationResult(req);
     let id = req.params.ids;
-    if(errors.isEmpty()) {    
+    if(errors.isEmpty()) {
+        await connectDB();    
         Order.findOne({_id: id}).then(data => {
             if(!data) {
                 return res.redirect("/allOrders");
@@ -162,6 +164,7 @@ app.post("/update/:ids", [
 });
 
 app.get("/delete/:ids", async (req, res) => {
+    await connectDB();
     let id = req.params.ids;
     // console.log(id);
     Order.findOneAndDelete({_id: id}).then(data => {
