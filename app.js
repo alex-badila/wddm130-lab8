@@ -85,8 +85,80 @@ app.get("/logout", async (req, res) => {
 });
 
 app.get("/update/:ids", async (req, res) => {
+    if (!req.session.loggedIn) return res.redirect("/login");
+
     let id = req.params.ids;
-    console.log(id);
+    Order.findOne({ _id: id }).then(data => {
+        if (!data) return res.redirect("/allOrders");
+        res.render("update", { order: data, id: data._id });
+    }).catch(err => console.log(err));
+});
+
+app.post("/update/:ids", [
+    check("name", "Name is empty").notEmpty(),
+    check("email", "Not a valid email").isEmail(),
+    check("tickets", "Ticket not selected").notEmpty().custom(value => {
+        if(isNaN(value)) {
+            throw Error("This is not a number");
+        } else if(value <= 0) {
+            throw Error("Not a positive number");
+        } else {
+            return true;
+        }
+    }),
+    check("campus", "Campus not selected").notEmpty(),
+    check("lunch", "Select yes/no for lunch").notEmpty(),
+    check("postcode", "Invalid Post Code Format").matches(/^[a-zA-Z]\d[a-zA-Z]\s\d[a-zA-Z]\d$/),
+    check("phone", "Invalid phone number").matches(/^\d{3}(\s|-)\d{3}(\s|-)\d{4}$/),
+    check("lunch").custom((value, {req}) => {
+        if(typeof(value) !== "undefined") {
+            if(value === "yes" && req.body.tickets < 3) {
+                throw Error("When lunch === yes buy 3 or more tickets")
+            }
+        } else {
+            throw Error("Lunch selection (yes/no) not completed")
+        }
+        return true;
+    })
+], async (req, res) => {
+    const errors = validationResult(req);
+    let id = req.params.ids;
+    if(errors.isEmpty()) {    
+        Order.findOne({_id: id}).then(data => {
+            if(!data) {
+                return res.redirect("/allOrders");
+            }
+
+            data.name = req.body.name;
+            data.email = req.body.email;
+            data.phone = req.body.phone;
+            data.postcode = req.body.postcode;
+            data.lunch = req.body.lunch;
+            data.tickets = req.body.tickets;
+            data.campus = req.body.campus;
+
+            let cost = 0;
+            if(data.tickets > 0){ cost = 100 * data.tickets; }
+            if(data.lunch == 'yes'){ cost += 60; }
+
+            let tax = cost * 0.13;
+            let total = cost + tax;
+
+            data.sub = cost.toFixed(2);
+            data.tax = tax.toFixed(2);
+            data.total = total.toFixed(2);
+            
+            data.save().then(datasaved => {
+                res.redirect("/allOrders");
+            }).catch(err => {
+                console.log(err);
+            }); 
+
+        });
+    } 
+    else {
+        res.render("update", { order: req.body, errors: errors.array(), id: id });
+    }
 });
 
 app.get("/delete/:ids", async (req, res) => {
@@ -97,12 +169,12 @@ app.get("/delete/:ids", async (req, res) => {
             res.redirect("/allOrders");
         }
         else {
-            
+            console.log("Error deleting data");
         }
     })
     .catch(err => {
-
-    })
+        console.log(err);
+    });
 });
 
 app.post("/processForm", [

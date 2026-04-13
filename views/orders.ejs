@@ -30,9 +30,9 @@
             <td><%= order.lunch %></td>
             <td><%= order.tickets %></td>
             <td><%= order.campus %></td>
-            <td>$<%= order.sub.toFixed(2) %></td>
-            <td>$<%= order.tax.toFixed(2) %></td>
-            <td>$<%= order.total.toFixed(2) %></td>
+            <td>$<%= order.sub ? Number(order.sub).toFixed(2) : "0.00" %></td>
+            <td>$<%= order.tax ? Number(order.tax).toFixed(2) : "0.00" %></td>
+            <td>$<%= order.total ? Number(order.total).toFixed(2) : "0.00" %></td>
             <td>
               <a href="/update/<%= order._id %>">Update</a>
             </td>
