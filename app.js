@@ -3,6 +3,7 @@ const path = require("path");
 const {check, validationResult} = require('express-validator');
 const mongoose = require("mongoose");
 const session = require("express-session");
+const MongoStore = require("connect-mongo");
 
 const Order = mongoose.model("Order", {
     name: String,
@@ -27,7 +28,10 @@ const app = express();
 app.use(session({
     secret: "mysecret",
     resave: false,
-    saveUninitialized: true
+    saveUninitialized: true,
+    store: MongoStore.create({                                                               // ← add this
+        mongoUrl: "mongodb+srv://alexbadila:Yo3kpaxy@cluster0.bwb3wky.mongodb.net/CollegeOrder"  // ← add this
+    })                                                                                       // ← add this
 }));
 
 // Connection caching for serverless
